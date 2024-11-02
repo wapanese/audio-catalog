@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title id="page-title">Audio Catalog</title>
+    <style>
+      :root {
+        --primary: #bb86fc;
+        --secondary: #03dac6;
+        --background: #121212;
+        --surface: #1f1b24;
+        --error: #cf6679;
+        --on-primary: #000000;
+        --on-secondary: #000000;
+        --on-background: #ffffff;
+        --on-surface: #ffffff;
+        --on-error: #000000;
+        --shadow: rgba(0, 0, 0, 0.2);
+        --border-radius: 12px;
+        --transition-speed: 0.3s;
+        --font-family: "Roboto", sans-serif;
+      }
+
+      body {
+        font-family: var(--font-family);
+        margin: 0;
+        background-color: var(--background);
+        color: var(--on-background);
+        transition: background-color var(--transition-speed),
+          color var(--transition-speed);
+      }
+
+      header {
+        text-align: center;
+        padding: 20px 0;
+        background-color: var(--surface);
+        margin: 0;
+        box-shadow: 0 2px 4px var(--shadow);
+        border-bottom-left-radius: var(--border-radius);
+        border-bottom-right-radius: var(--border-radius);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 1.5rem;
+      }
+
+      .container {
+        padding: 20px;
+        padding-bottom: 200px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 24px;
+      }
+
+      .anime-card {
+        background-color: var(--surface);
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        box-shadow: 0 4px 6px var(--shadow);
+        transition: transform var(--transition-speed),
+          box-shadow var(--transition-speed);
+        cursor: pointer;
+      }
+
+      .anime-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 8px 12px var(--shadow);
+      }
+
+      .anime-card img {
+        width: 100%;
+        height: 250px;
+        object-fit: cover;
+        transition: transform var(--transition-speed);
+      }
+
+      .anime-card img:hover {
+        transform: scale(1.05);
+      }
+
+      .anime-title {
+        padding: 12px;
+        background-color: var(--surface);
+        font-weight: 500;
+        font-size: 1rem;
+        text-align: center;
+      }
+
+      .list-view {
+        list-style: none;
+        padding: 0;
+      }
+
+      .list-view li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 20px;
+        background-color: var(--surface);
+        margin-bottom: 10px;
+        border-radius: var(--border-radius);
+        font-weight: bold;
+      }
+
+      .list-view li button,
+      .list-view li a {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border: none;
+        border-radius: 12px;
+        background-color: var(--primary);
+        color: var(--on-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color var(--transition-speed);
+        margin-left: 10px;
+      }
+
+      .list-view li button:hover,
+      .list-view li a:hover {
+        background-color: var(--secondary);
+      }
+
+      .list-view li button svg,
+      .list-view li a svg {
+        width: 24px;
+        height: 24px;
+        fill: var(--on-primary);
+      }
+
+      .list-view li .button-group {
+        display: flex;
+        align-items: center;
+      }
+
+      @media (max-width: 768px) {
+        .grid {
+          grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        }
+      }
+
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: var(--surface);
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background-color: var(--primary);
+        border-radius: 4px;
+      }
+
+      #setup-container {
+        max-width: 400px;
+        margin: 40px auto;
+        padding: 24px;
+        background-color: var(--surface);
+        border-radius: var(--border-radius);
+        box-shadow: 0 4px 8px var(--shadow);
+      }
+
+      #setup-form {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      #setup-form label {
+        font-size: 0.9rem;
+        color: var(--on-surface);
+      }
+
+      #setup-form input {
+        padding: 12px;
+        border: none;
+        border-radius: var(--border-radius);
+        background-color: var(--background);
+        color: var(--on-surface);
+        font-family: var(--font-family);
+        font-size: 1rem;
+      }
+
+      #setup-form button {
+        padding: 12px;
+        border: none;
+        border-radius: var(--border-radius);
+        background-color: var(--primary);
+        color: var(--on-primary);
+        font-family: var(--font-family);
+        font-size: 1rem;
+        cursor: pointer;
+        transition: transform var(--transition-speed),
+          background-color var(--transition-speed);
+        margin-top: 8px;
+      }
+
+      #setup-form button:hover {
+        background-color: var(--secondary);
+        transform: translateY(-2px);
+      }
+
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(18, 18, 18, 0.8);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+
+      .spinner {
+        border: 8px solid var(--surface);
+        border-top: 8px solid var(--primary);
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 1s linear infinite;
+      }
+
+      .loading-text {
+        margin-top: 16px;
+        font-size: 1.2rem;
+        color: var(--primary);
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .header-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        padding: 0 20px;
+      }
+
+      .back-button {
+        position: absolute;
+        left: 20px;
+        color: var(--on-surface);
+        text-decoration: none;
+        font-size: 24px;
+        display: flex;
+        align-items: center;
+        padding: 8px;
+        border-radius: var(--border-radius);
+        transition: background-color var(--transition-speed);
+      }
+
+      .back-button:hover {
+        background-color: var(--primary);
+        color: var(--on-primary);
+      }
+
+      #custom-audio-player {
+        font-family: var(--font-family);
+      }
+
+      #audio-title {
+        font-size: 1rem;
+        font-weight: bold;
+      }
+
+      #subtitles {
+        font-size: 2rem;
+        color: var(--on-background);
+        min-height: 2.5rem;
+        text-align: center;
+        margin-bottom: 5px;
+        margin-left: 10px;
+        margin-right: 10px;
+      }
+
+      #progress-bar {
+        transition: width 0.1s linear;
+      }
+
+      button:focus {
+        outline: none;
+      }
+
+      #custom-audio-player {
+        font-family: var(--font-family);
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: var(--surface);
+        padding: 15px 20px;
+        box-shadow: 0 -2px 5px var(--shadow);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        z-index: 1001;
+        box-sizing: border-box;
+      }
+
+      .audio-controls {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-sizing: border-box;
+      }
+
+      .audio-controls button {
+        flex: 0 0 auto;
+        width: 36px;
+        height: 36px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .audio-controls > button svg {
+        width: 36px;
+        height: 36px;
+        fill: var(--on-surface);
+      }
+
+      .progress-container {
+        flex: 1;
+        height: 12px;
+        background-color: var(--background);
+        cursor: pointer;
+        margin: 0 15px;
+        position: relative;
+        border-radius: 6px;
+      }
+
+      .progress-bar {
+        width: 0%;
+        height: 100%;
+        background-color: var(--primary);
+        border-radius: 6px;
+        position: relative;
+      }
+
+      .progress-bar::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        right: 0%;
+        transform: translate(50%, -50%);
+        width: 16px;
+        height: 16px;
+        background-color: var(--primary);
+        border-radius: 50%;
+        filter: brightness(0.8);
+      }
+
+      #search-bar-container {
+        display: none;
+        padding: 20px;
+      }
+
+      #search-bar {
+        width: 100%;
+        padding: 10px 15px;
+        border: none;
+        border-radius: var(--border-radius);
+        font-size: 1rem;
+        font-family: var(--font-family);
+        background-color: var(--surface);
+        color: var(--on-surface);
+        transition: background-color var(--transition-speed),
+          color var(--transition-speed);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="header-container">
+        <h1 id="page-header">Audio Catalog</h1>
+      </div>
+    </header>
+
+    <div id="search-bar-container">
+      <input type="text" id="search-bar" placeholder="Search anime..." />
+    </div>
+
+    <div id="loading" class="loading-overlay" hidden>
+      <div class="spinner"></div>
+      <div class="loading-text">Loading...</div>
+    </div>
+
+    <div id="content" class="container"></div>
+
+    <script>
+      const CACHE = {};
+
+      const PLAY_SVG = `
+        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#e8eaed"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M10 8.64L15.27 12 10 15.36V8.64M8 5v14l11-7L8 5z"/></svg>
+      `;
+
+      const PAUSE_SVG = `
+        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#e8eaed"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+      `;
+
+      const NEXT_SVG = `
+        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#e8eaed"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M6 18l8.5-6L6 6v12zm2-8.14L11.03 12 8 14.14V9.86zM16 6h2v12h-2z"/></svg>
+      `;
+
+      const PREV_SVG = `
+        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#e8eaed"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M6 6h2v12H6zm3.5 6l8.5 6V6l-8.5 6zm6.5 2.14L12.97 12 16 9.86v4.28z"/></svg>
+      `;
+
+      const DOWNLOAD_SVG = `
+        <svg xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="#e8eaed"><g><rect fill="none" height="24" width="24"/></g><g><path d="M18,15v3H6v-3H4v3c0,1.1,0.9,2,2,2h12c1.1,0,2-0.9,2-2v-3H18z M17,11l-1.41-1.41L13,12.17V4h-2v8.17L8.41,9.59L7,11l5,5 L17,11z"/></g></svg>
+      `;
+
+      function showLoading() {
+        const loading = document.getElementById("loading");
+        if (loading) {
+          loading.style.display = "flex";
+        }
+      }
+
+      function hideLoading() {
+        const loading = document.getElementById("loading");
+        if (loading) {
+          loading.style.display = "none";
+        }
+      }
+
+      function encodePathComponent(component) {
+        return encodeURIComponent(component).replace(/%2F/g, "/");
+      }
+
+      function updatePageTitle(title) {
+        document.getElementById("page-title").textContent = title;
+        document.getElementById("page-header").textContent = title;
+      }
+
+      async function fetchAndParse(url) {
+        if (CACHE[url]) {
+          return CACHE[url];
+        }
+
+        try {
+          const response = await fetch(url);
+          if (!response.ok)
+            throw new Error(`HTTP error! status: ${response.status}`);
+          const text = await response.text();
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(text, "text/html");
+          CACHE[url] = doc;
+          return doc;
+        } catch (error) {
+          console.error("Error fetching URL:", url, error);
+          return null;
+        }
+      }
+
+      async function getDirectories(url) {
+        const doc = await fetchAndParse(url);
+        if (!doc) return [];
+        const links = Array.from(doc.querySelectorAll("a")).map((a) =>
+          decodeURIComponent(a.getAttribute("href"))
+        );
+        let dirs = links
+          .filter(
+            (href) =>
+              href.endsWith("/") &&
+              !["./", "../"].includes(href) &&
+              !href.includes("_ocr/")
+          )
+          .map((dir) => dir.replace(/\/$/, ""));
+        return dirs;
+      }
+
+      async function createLandingPage(baseurl) {
+        document.getElementById("search-bar-container").style.display = "flex";
+        updatePageTitle("Audio Catalog");
+        showLoading();
+
+        try {
+          const content = document.getElementById("content");
+          const grid = document.createElement("div");
+          grid.className = "grid";
+          content.appendChild(grid);
+
+          const dirs = await getDirectories(baseurl);
+
+          if (dirs.length === 0) {
+            grid.innerHTML = "<p>No directories found.</p>";
+            return;
+          }
+
+          const ids = dirs.map((dir) => {
+            const parts = dir.split(" - ");
+            return parseInt(parts[parts.length - 1]);
+          });
+
+          const batches = [];
+          for (let i = 0; i < ids.length; i += 10) {
+            batches.push(ids.slice(i, i + 10));
+          }
+
+          const posterDataList = [];
+          for (const batch of batches) {
+            const posters = await fetchPosters(batch);
+            posterDataList.push(...posters);
+          }
+
+          const posterDataMap = {};
+          posterDataList.forEach((anime) => {
+            posterDataMap[anime.id] = anime;
+          });
+
+          dirs.forEach((dir) => {
+            const parts = dir.split(" - ");
+            const animeName = parts.slice(0, -1).join(" - ");
+            const animeId = parseInt(parts[parts.length - 1]);
+
+            const posterContainer = document.createElement("div");
+            posterContainer.className = "anime-card";
+
+            const posterData = posterDataMap[animeId];
+
+            if (posterData) {
+              posterContainer.setAttribute(
+                "data-romaji",
+                posterData.title.romaji || ""
+              );
+              posterContainer.setAttribute(
+                "data-english",
+                posterData.title.english || ""
+              );
+              posterContainer.setAttribute(
+                "data-native",
+                posterData.title.native || ""
+              );
+            } else {
+              posterContainer.setAttribute("data-romaji", "");
+              posterContainer.setAttribute("data-english", "");
+              posterContainer.setAttribute("data-native", "");
+            }
+
+            const img = document.createElement("img");
+            img.alt = animeName;
+
+            if (posterData) {
+              img.src = posterData.coverImage.extraLarge;
+              const displayTitle =
+                posterData.title.native || posterData.title.romaji;
+              img.title = displayTitle;
+            } else {
+              img.src = "https://via.placeholder.com/250x350?text=No+Cover";
+              img.title = animeName;
+            }
+
+            const titleDiv = document.createElement("div");
+            titleDiv.className = "anime-title";
+            titleDiv.textContent = posterData?.title.native || animeName;
+
+            posterContainer.appendChild(img);
+            posterContainer.appendChild(titleDiv);
+
+            posterContainer.addEventListener("click", () => {
+              const subdir = encodeURIComponent(dir);
+              const newParams = new URLSearchParams({
+                baseurl: baseurl,
+                subdir: subdir,
+              });
+              window.location.search = newParams.toString();
+            });
+
+            grid.appendChild(posterContainer);
+          });
+        } catch (error) {
+          console.error("Error creating landing page:", error);
+          content.innerHTML = "<p>Failed to load landing page.</p>";
+        } finally {
+          hideLoading();
+        }
+      }
+      function openDatabase() {
+        return new Promise((resolve, reject) => {
+          const request = window.indexedDB.open("animeDB", 1);
+          request.onerror = (event) => {
+            console.error("Database error:", event.target.errorCode);
+            reject(event.target.errorCode);
+          };
+          request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            const objectStore = db.createObjectStore("anime", {
+              keyPath: "id",
+            });
+            objectStore.createIndex("title", "title", { unique: false });
+            objectStore.createIndex("coverImage", "coverImage", {
+              unique: false,
+            });
+          };
+          request.onsuccess = (event) => {
+            const db = event.target.result;
+            resolve(db);
+          };
+        });
+      }
+
+      function getAnimeFromDB(db, ids) {
+        return new Promise((resolve) => {
+          const transaction = db.transaction(["anime"], "readonly");
+          const objectStore = transaction.objectStore("anime");
+          const results = [];
+          let count = 0;
+          ids.forEach((id) => {
+            const request = objectStore.get(id);
+            request.onsuccess = (event) => {
+              if (event.target.result) {
+                results.push(event.target.result);
+              }
+              count++;
+              if (count === ids.length) {
+                resolve(results);
+              }
+            };
+            request.onerror = () => {
+              count++;
+              if (count === ids.length) {
+                resolve(results);
+              }
+            };
+          });
+        });
+      }
+
+      function storeAnimeInDB(db, animeList) {
+        return new Promise((resolve, reject) => {
+          const transaction = db.transaction(["anime"], "readwrite");
+          const objectStore = transaction.objectStore("anime");
+          animeList.forEach((anime) => {
+            objectStore.put(anime);
+          });
+          transaction.oncomplete = () => {
+            resolve();
+          };
+          transaction.onerror = (event) => {
+            console.error("Transaction error:", event.target.errorCode);
+            reject(event.target.errorCode);
+          };
+        });
+      }
+
+      async function fetchPosters(ids) {
+        const db = await openDatabase();
+
+        const cachedAnime = await getAnimeFromDB(db, ids);
+        const cachedIds = cachedAnime.map((anime) => anime.id);
+        const idsToFetch = ids.filter((id) => !cachedIds.includes(id));
+
+        let fetchedAnime = [];
+        if (idsToFetch.length > 0) {
+          const url = "https://graphql.anilist.co";
+          const query = `
+            query ($ids: [Int]) {
+              Page {
+                media(id_in: $ids, type: ANIME) {
+                  id
+                  title {
+                    romaji
+                    english
+                    native
+                  }
+                  coverImage {
+                    extraLarge
+                  }
+                }
+              }
+            }
+          `;
+          const variables = { ids: idsToFetch };
+          try {
+            const response = await fetch(url, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+              body: JSON.stringify({ query, variables }),
+            });
+            const data = await response.json();
+            if (data.data.Page.media) {
+              fetchedAnime = data.data.Page.media;
+              await storeAnimeInDB(db, fetchedAnime);
+            }
+          } catch (error) {
+            console.error("Error fetching posters:", error);
+          }
+        }
+
+        const animeList = cachedAnime.concat(fetchedAnime);
+        return animeList;
+      }
+
+      async function createSubdirView(baseurl, subdir) {
+        document.getElementById("search-bar-container").style.display = "none";
+        const parts = subdir.split(" - ");
+        let animeName = parts.slice(0, -1).join(" - ");
+        const animeId = parseInt(parts[parts.length - 1]);
+        const data = await fetchPosters([animeId]);
+        const animeData = data.find((anime) => anime.id === animeId);
+
+        animeName =
+          animeData?.title?.native || animeData?.title?.romaji || animeName;
+
+        updatePageTitle(animeName);
+        const headerContainer = document.querySelector(".header-container");
+        const backButton = document.createElement("a");
+        backButton.href = `?baseurl=${encodeURIComponent(baseurl)}`;
+        backButton.className = "back-button";
+        backButton.innerHTML = "➜";
+        backButton.title = "Back to catalog";
+        backButton.style.transform = "scale(-1, 1)";
+        headerContainer.insertBefore(backButton, headerContainer.firstChild);
+
+        showLoading();
+
+        try {
+          const content = document.getElementById("content");
+          const list = document.createElement("ul");
+          list.className = "list-view";
+          content.appendChild(list);
+
+          const subdirUrl = `${baseurl.replace(
+            /\/+$/,
+            ""
+          )}/${encodePathComponent(subdir)}/`;
+          const doc = await fetchAndParse(subdirUrl);
+          if (!doc) {
+            list.innerHTML = "<li>Failed to fetch files.</li>";
+            return;
+          }
+
+          const links = Array.from(doc.querySelectorAll("a")).map((a) =>
+            decodeURIComponent(a.getAttribute("href"))
+          );
+
+          const audioExtensions = [".opus", ".ogg", ".mp3"];
+          const subtitleExtensions = [".srt"];
+
+          const audioFiles = links
+            .filter((href) =>
+              audioExtensions.some((ext) => href.toLowerCase().endsWith(ext))
+            )
+            .sort();
+
+          const subtitleFiles = links
+            .filter((href) =>
+              subtitleExtensions.some((ext) => href.toLowerCase().endsWith(ext))
+            )
+            .sort();
+
+          audioFiles.forEach((audio) => {
+            const audioBaseName = audio.slice(0, audio.lastIndexOf("."));
+            const correspondingSubtitle = subtitleFiles.find((sub) =>
+              sub.startsWith(audioBaseName)
+            );
+
+            const li = document.createElement("li");
+            li.textContent = audioBaseName;
+
+            const buttonGroup = document.createElement("div");
+            buttonGroup.className = "button-group";
+
+            const playButton = document.createElement("button");
+            playButton.innerHTML = PLAY_SVG;
+            playButton.title = "Play";
+
+            const coverImageUrl = animeData?.coverImage?.extraLarge;
+
+            playButton.addEventListener("click", () => {
+              const audioList = audioFiles.map(
+                (file) => `${subdirUrl}${encodePathComponent(file)}`
+              );
+              const subtitleList = audioFiles.map((file) => {
+                const sub = subtitleFiles.find((sub) =>
+                  sub.startsWith(file.split(".")[0])
+                );
+                return sub ? `${subdirUrl}${encodePathComponent(sub)}` : null;
+              });
+              const index = audioFiles.indexOf(audio);
+              playAudioWithSubtitles(
+                index,
+                audioList,
+                subtitleList,
+                coverImageUrl
+              );
+            });
+
+            const downloadButton = document.createElement("a");
+            downloadButton.href = `${subdirUrl}${encodePathComponent(audio)}`;
+            downloadButton.download = audio;
+            downloadButton.innerHTML = DOWNLOAD_SVG;
+            downloadButton.title = "Download";
+
+            buttonGroup.appendChild(playButton);
+            buttonGroup.appendChild(downloadButton);
+            li.appendChild(buttonGroup);
+            list.appendChild(li);
+          });
+          if (audioFiles.length === 0) {
+            list.innerHTML = "<li>No audio files found.</li>";
+          }
+        } catch (error) {
+          console.error("Error creating subdirectory view:", error);
+          content.innerHTML = "<p>Failed to load subdirectory view.</p>";
+        } finally {
+          hideLoading();
+        }
+      }
+
+      function playAudioWithSubtitles(
+        index,
+        audioList,
+        subtitleList,
+        coverImageUrl
+      ) {
+        const existingAudio = document.getElementById("current-audio");
+        if (existingAudio) {
+          existingAudio.pause();
+          existingAudio.remove();
+        }
+
+        const existingPlayer = document.getElementById("custom-audio-player");
+        if (existingPlayer) {
+          existingPlayer.remove();
+        }
+
+        const playerContainer = document.createElement("div");
+        playerContainer.id = "custom-audio-player";
+
+        const titleContainer = document.createElement("div");
+        titleContainer.style.width = "100%";
+        titleContainer.style.display = "flex";
+        titleContainer.style.justifyContent = "flex-start";
+        titleContainer.style.marginBottom = "5px";
+
+        const audioTitle = document.createElement("div");
+        audioTitle.id = "audio-title";
+        const pageTitle = document.getElementById("page-header").textContent;
+
+        audioTitle.textContent =
+          pageTitle +
+          " - " +
+          audioList[index]
+            .split("/")
+            .pop()
+            .replace(/\.[^/.]+$/, "");
+        audioTitle.style.color = "var(--on-surface)";
+        audioTitle.style.fontSize = "1rem";
+        audioTitle.style.fontWeight = "bold";
+        titleContainer.appendChild(audioTitle);
+        playerContainer.appendChild(titleContainer);
+
+        const subtitlesDiv = document.createElement("div");
+        subtitlesDiv.id = "subtitles";
+        playerContainer.appendChild(subtitlesDiv);
+
+        const controlsContainer = document.createElement("div");
+        controlsContainer.className = "audio-controls";
+        playerContainer.appendChild(controlsContainer);
+
+        const prevButton = document.createElement("button");
+        prevButton.id = "prev-button";
+        prevButton.innerHTML = PREV_SVG;
+        controlsContainer.appendChild(prevButton);
+
+        const playButton = document.createElement("button");
+        playButton.id = "play-button";
+        playButton.innerHTML = PLAY_SVG;
+        controlsContainer.appendChild(playButton);
+
+        const nextButton = document.createElement("button");
+        nextButton.id = "next-button";
+        nextButton.innerHTML = NEXT_SVG;
+        controlsContainer.appendChild(nextButton);
+
+        const progressContainer = document.createElement("div");
+        progressContainer.className = "progress-container";
+        controlsContainer.appendChild(progressContainer);
+
+        const progressBar = document.createElement("div");
+        progressBar.className = "progress-bar";
+        progressContainer.appendChild(progressBar);
+
+        const timeDisplayContainer = document.createElement("div");
+        timeDisplayContainer.style.display = "flex";
+        timeDisplayContainer.style.height = "100%";
+        timeDisplayContainer.style.alignItems = "center";
+
+        const timeDisplay = document.createElement("div");
+
+        timeDisplay.id = "time-display";
+        timeDisplay.textContent = "0:00 / 0:00";
+
+        timeDisplayContainer.appendChild(timeDisplay);
+        controlsContainer.appendChild(timeDisplayContainer);
+
+        document.body.appendChild(playerContainer);
+
+        const audio = document.createElement("audio");
+        audio.id = "current-audio";
+        audio.src = audioList[index];
+        audio.preload = "none";
+        audio.style.display = "none";
+        document.body.appendChild(audio);
+
+        let subtitleData = [];
+        if (subtitleList[index]) {
+          fetch(subtitleList[index])
+            .then((response) => response.text())
+            .then((data) => {
+              subtitleData = parseSRT(data);
+            });
+        }
+
+        function parseSRT(data) {
+          const regex =
+            /(\d+)\s+(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})\s+([\s\S]*?)(?=\n\n|\n*$)/g;
+          let result,
+            subtitles = [];
+          while ((result = regex.exec(data)) !== null) {
+            subtitles.push({
+              start: toSeconds(result[2]),
+              end: toSeconds(result[3]),
+              text: result[4].replace(/\n/g, "<br>"),
+            });
+          }
+          return subtitles;
+        }
+
+        function toSeconds(time) {
+          const parts = time.split(/[:,]/);
+          return (
+            parseInt(parts[0]) * 3600 +
+            parseInt(parts[1]) * 60 +
+            parseInt(parts[2]) +
+            parseInt(parts[3]) / 1000
+          );
+        }
+
+        audio.ontimeupdate = () => {
+          const currentTime = audio.currentTime;
+          const currentSubtitle = subtitleData.find(
+            (sub) => currentTime >= sub.start && currentTime <= sub.end
+          );
+          subtitlesDiv.innerHTML = currentSubtitle ? currentSubtitle.text : "";
+          const progressPercent = (currentTime / audio.duration) * 100;
+          progressBar.style.width = `${progressPercent}%`;
+          timeDisplay.textContent = `${formatTime(currentTime).padStart(
+            5,
+            "0"
+          )} / ${formatTime(audio.duration).padStart(5, "0")}`;
+        };
+
+        function formatTime(seconds) {
+          const mins = Math.floor(seconds / 60);
+          const secs = Math.floor(seconds % 60);
+          return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+        }
+
+        playButton.addEventListener("click", () => {
+          if (audio.paused) {
+            audio.play();
+            playButton.innerHTML = PAUSE_SVG;
+          } else {
+            audio.pause();
+            playButton.innerHTML = PLAY_SVG;
+          }
+        });
+
+        progressContainer.addEventListener("click", (e) => {
+          const rect = progressContainer.getBoundingClientRect();
+          const clickX = e.clientX - rect.left;
+          const width = rect.width;
+          const newTime = (clickX / width) * audio.duration;
+          audio.currentTime = newTime;
+        });
+
+        function playNext() {
+          if (index < audioList.length - 1) {
+            playAudioWithSubtitles(
+              index + 1,
+              audioList,
+              subtitleList,
+              coverImageUrl
+            );
+          }
+        }
+
+        function playPrevious() {
+          if (index > 0) {
+            playAudioWithSubtitles(
+              index - 1,
+              audioList,
+              subtitleList,
+              coverImageUrl
+            );
+          }
+        }
+
+        nextButton.addEventListener("click", playNext);
+        prevButton.addEventListener("click", playPrevious);
+
+        audio.addEventListener("ended", playNext);
+
+        let isDragging = false;
+        let wasPlaying = false;
+
+        progressContainer.addEventListener("mousedown", (e) => {
+          wasPlaying = !audio.paused;
+          if (wasPlaying) {
+            audio.pause();
+            playButton.innerHTML = PLAY_SVG;
+          }
+          isDragging = true;
+          updateProgress(e);
+        });
+
+        document.addEventListener("mousemove", (e) => {
+          if (isDragging) {
+            updateProgress(e);
+          }
+        });
+
+        document.addEventListener("mouseup", (e) => {
+          if (isDragging) {
+            isDragging = false;
+            updateProgress(e);
+            if (wasPlaying) {
+              audio.play();
+              playButton.innerHTML = PAUSE_SVG;
+            }
+            wasPlaying = false;
+          }
+        });
+
+        function updateProgress(e) {
+          const rect = progressContainer.getBoundingClientRect();
+          let offsetX = e.clientX - rect.left;
+          const width = rect.width;
+          const newTime = (offsetX / width) * audio.duration;
+          audio.currentTime = newTime;
+          progressBar.style.width = `${(newTime / audio.duration) * 100}%`;
+        }
+
+        progressContainer.addEventListener("click", (e) => {
+          if (!isDragging) {
+            const rect = progressContainer.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const width = rect.width;
+            const newTime = (clickX / width) * audio.duration;
+            audio.currentTime = newTime;
+          }
+        });
+
+        if ("mediaSession" in navigator) {
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title: audioList[index]
+              .split("/")
+              .pop()
+              .replace(/\.[^/.]+$/, ""),
+            artist: pageTitle,
+            artwork: [
+              {
+                src: coverImageUrl,
+                sizes: "512x512",
+                type: `image/${coverImageUrl.split(".").pop()}`,
+              },
+            ],
+          });
+
+          navigator.mediaSession.setActionHandler(
+            "previoustrack",
+            playPrevious
+          );
+          navigator.mediaSession.setActionHandler("nexttrack", playNext);
+        }
+
+        audio.play();
+        playButton.innerHTML = PAUSE_SVG;
+      }
+
+      async function createInputPrompt() {
+        const content = document.getElementById("content");
+        content.innerHTML = `
+          <div id="setup-container" class="setup-container">
+            <form id="setup-form" class="setup-form">
+              <div class="form-group">
+                <label for="baseurl" class="form-label">Base URL:</label>
+                <input type="text" id="baseurl" required class="form-input" placeholder="https://example.com/" />
+              </div>
+              <button type="submit">Continue</button>
+            </form>
+          </div>
+        `;
+
+        return new Promise((resolve) => {
+          document
+            .getElementById("setup-form")
+            .addEventListener("submit", (e) => {
+              e.preventDefault();
+              const baseurl = document.getElementById("baseurl").value.trim();
+              if (baseurl) {
+                content.innerHTML = "";
+                resolve(baseurl);
+              }
+            });
+        });
+      }
+
+      async function init() {
+        const params = new URLSearchParams(window.location.search);
+        let baseurl = params.get("baseurl");
+        const subdir = params.get("subdir");
+
+        if (!baseurl) {
+          hideLoading();
+          baseurl = await createInputPrompt();
+          const newParams = new URLSearchParams({ baseurl: baseurl });
+          const newUrl = `${window.location.pathname}?${newParams.toString()}`;
+          window.history.replaceState({}, "", newUrl);
+          showLoading();
+        }
+
+        baseurl = decodeURIComponent(baseurl);
+
+        if (subdir) {
+          await createSubdirView(baseurl, decodeURIComponent(subdir));
+        } else {
+          await createLandingPage(baseurl);
+        }
+
+        const searchBar = document.getElementById("search-bar");
+        searchBar.addEventListener("input", () => {
+          const query = searchBar.value.toLowerCase();
+          const animeCards = document.querySelectorAll(".anime-card");
+
+          animeCards.forEach((card) => {
+            const english = card.getAttribute("data-english").toLowerCase();
+            const romaji = card.getAttribute("data-romaji").toLowerCase();
+            const native = card.getAttribute("data-native").toLowerCase();
+            const title = card
+              .querySelector(".anime-title")
+              .textContent.toLowerCase();
+
+            if (
+              english.includes(query) ||
+              romaji.includes(query) ||
+              native.includes(query) ||
+              title.includes(query)
+            ) {
+              card.style.display = "block";
+            } else {
+              card.style.display = "none";
+            }
+          });
+        });
+      }
+
+      window.addEventListener("DOMContentLoaded", init);
+    </script>
+  </body>
+</html>
