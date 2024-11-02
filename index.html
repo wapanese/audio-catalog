@@ -995,8 +995,6 @@
             5,
             "0"
           )} / ${formatTime(audio.duration).padStart(5, "0")}`;
-
-          updateMediaSessionPositionState();
         };
 
         function formatTime(seconds) {
@@ -1075,7 +1073,17 @@
         let isDragging = false;
         let wasPlaying = false;
 
-        progressContainer.addEventListener("mousedown", (e) => {
+        progressContainer.addEventListener("mousedown", startDragging);
+        progressContainer.addEventListener("touchstart", startDragging);
+
+        document.addEventListener("mousemove", drag);
+        document.addEventListener("touchmove", drag);
+
+        document.addEventListener("mouseup", endDragging);
+        document.addEventListener("touchend", endDragging);
+
+        function startDragging(e) {
+          e.preventDefault(); // Prevent scrolling on touch devices
           wasPlaying = !audio.paused;
           if (wasPlaying) {
             audio.pause();
@@ -1083,15 +1091,16 @@
           }
           isDragging = true;
           updateProgress(e);
-        });
+        }
 
-        document.addEventListener("mousemove", (e) => {
+        function drag(e) {
           if (isDragging) {
+            e.preventDefault();
             updateProgress(e);
           }
-        });
+        }
 
-        document.addEventListener("mouseup", (e) => {
+        function endDragging(e) {
           if (isDragging) {
             isDragging = false;
             updateProgress(e);
@@ -1101,24 +1110,36 @@
             }
             wasPlaying = false;
           }
-        });
+        }
 
         function updateProgress(e) {
           const rect = progressContainer.getBoundingClientRect();
-          let offsetX = e.clientX - rect.left;
+          let clientX;
+
+          // Handle both mouse and touch events
+          if (e.type.startsWith("touch")) {
+            if (e.touches && e.touches[0]) {
+              clientX = e.touches[0].clientX;
+            } else if (e.changedTouches && e.changedTouches[0]) {
+              clientX = e.changedTouches[0].clientX;
+            } else {
+              return;
+            }
+          } else {
+            clientX = e.clientX;
+          }
+
+          let offsetX = Math.min(Math.max(clientX - rect.left, 0), rect.width);
           const width = rect.width;
           const newTime = (offsetX / width) * audio.duration;
           audio.currentTime = newTime;
           progressBar.style.width = `${(newTime / audio.duration) * 100}%`;
         }
 
+        // Update the click handler to work with touch
         progressContainer.addEventListener("click", (e) => {
           if (!isDragging) {
-            const rect = progressContainer.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-            const width = rect.width;
-            const newTime = (clickX / width) * audio.duration;
-            audio.currentTime = newTime;
+            updateProgress(e);
           }
         });
 
