@@ -1157,12 +1157,14 @@
               }
             });
           }
+        }
 
-          return () => {
-            if (mediaSessionUpdateInterval) {
-              clearInterval(mediaSessionUpdateInterval);
-            }
-          };
+        function preloadNextTrack(audioList, currentIndex) {
+          if (currentIndex < audioList.length - 1) {
+            fetch(audioList[currentIndex + 1], { method: "HEAD" }).catch(
+              (err) => console.warn("Preload HEAD request failed:", err)
+            );
+          }
         }
 
         audio
@@ -1173,6 +1175,7 @@
               updateMediaSessionPositionState,
               1000
             );
+            preloadNextTrack(audioList, index);
           })
           .catch((e) => console.warn("Autoplay failed:", e));
       }
