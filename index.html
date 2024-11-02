@@ -1104,6 +1104,48 @@
             playPrevious
           );
           navigator.mediaSession.setActionHandler("nexttrack", playNext);
+
+          navigator.mediaSession.setActionHandler("play", () => {
+            audio.play();
+            playButton.innerHTML = PAUSE_SVG;
+          });
+
+          navigator.mediaSession.setActionHandler("pause", () => {
+            audio.pause();
+            playButton.innerHTML = PLAY_SVG;
+          });
+
+          if ("seekto" in navigator.mediaSession) {
+            navigator.mediaSession.setActionHandler("seekto", (details) => {
+              if (details.fastSeek && "seekable" in audio) {
+                audio.currentTime = details.seekTime;
+              } else {
+                audio.currentTime = details.seekTime;
+              }
+            });
+          }
+
+          function updatePositionState() {
+            if (
+              "mediaSession" in navigator &&
+              "setPositionState" in navigator.mediaSession
+            ) {
+              if (!audio.duration || isNaN(audio.duration)) {
+                return;
+              }
+
+              navigator.mediaSession.setPositionState({
+                duration: audio.duration,
+                playbackRate: audio.playbackRate,
+                position: audio.currentTime,
+              });
+            }
+          }
+
+          audio.addEventListener("loadedmetadata", updatePositionState);
+          audio.addEventListener("timeupdate", updatePositionState);
+          audio.addEventListener("ratechange", updatePositionState);
+          audio.addEventListener("durationchange", updatePositionState);
         }
 
         audio.play();
