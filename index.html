@@ -282,6 +282,7 @@
 
       #audio-title {
         font-size: 1rem;
+        margin-bottom: 5px;
         font-weight: bold;
       }
 
@@ -864,6 +865,10 @@
         titleContainer.style.justifyContent = "flex-start";
         titleContainer.style.marginBottom = "5px";
 
+        const subtitlesDiv = document.createElement("div");
+        subtitlesDiv.id = "subtitles";
+        playerContainer.appendChild(subtitlesDiv);
+
         const audioTitle = document.createElement("div");
         audioTitle.id = "audio-title";
         const pageTitle = document.getElementById("page-header").textContent;
@@ -880,10 +885,6 @@
         audioTitle.style.fontWeight = "bold";
         titleContainer.appendChild(audioTitle);
         playerContainer.appendChild(titleContainer);
-
-        const subtitlesDiv = document.createElement("div");
-        subtitlesDiv.id = "subtitles";
-        playerContainer.appendChild(subtitlesDiv);
 
         const controlsContainer = document.createElement("div");
         controlsContainer.className = "audio-controls";
@@ -968,6 +969,20 @@
           );
         }
 
+        function updateMediaSessionPositionState() {
+          if ("mediaSession" in navigator && !isNaN(audio.duration)) {
+            navigator.mediaSession.setPositionState({
+              duration: audio.duration,
+              playbackRate: audio.playbackRate,
+              position: audio.currentTime,
+            });
+
+            navigator.mediaSession.playbackState = audio.paused
+              ? "paused"
+              : "playing";
+          }
+        }
+
         audio.ontimeupdate = () => {
           const currentTime = audio.currentTime;
           const currentSubtitle = subtitleData.find(
@@ -981,20 +996,7 @@
             "0"
           )} / ${formatTime(audio.duration).padStart(5, "0")}`;
 
-          if (
-            "mediaSession" in navigator &&
-            "setPositionState" in navigator.mediaSession
-          ) {
-            if (!audio.duration || isNaN(audio.duration)) {
-              return;
-            }
-
-            navigator.mediaSession.setPositionState({
-              duration: audio.duration,
-              playbackRate: audio.playbackRate,
-              position: audio.currentTime,
-            });
-          }
+          updateMediaSessionPositionState();
         };
 
         function formatTime(seconds) {
@@ -1002,16 +1004,6 @@
           const secs = Math.floor(seconds % 60);
           return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
         }
-
-        playButton.addEventListener("click", () => {
-          if (audio.paused) {
-            audio.play();
-            playButton.innerHTML = PAUSE_SVG;
-          } else {
-            audio.pause();
-            playButton.innerHTML = PLAY_SVG;
-          }
-        });
 
         progressContainer.addEventListener("click", (e) => {
           const rect = progressContainer.getBoundingClientRect();
@@ -1042,6 +1034,21 @@
             );
           }
         }
+
+        function playPause() {
+          if (audio.paused) {
+            audio.play();
+            playButton.innerHTML = PAUSE_SVG;
+          } else {
+            audio.pause();
+            playButton.innerHTML = PLAY_SVG;
+          }
+          updateMediaSessionPositionState();
+        }
+
+        playButton.addEventListener("click", () => {
+          playPause();
+        });
 
         nextButton.addEventListener("click", playNext);
         prevButton.addEventListener("click", playPrevious);
@@ -1121,13 +1128,11 @@
           navigator.mediaSession.setActionHandler("nexttrack", playNext);
 
           navigator.mediaSession.setActionHandler("play", () => {
-            audio.play();
-            playButton.innerHTML = PAUSE_SVG;
+            playPause();
           });
 
           navigator.mediaSession.setActionHandler("pause", () => {
-            audio.pause();
-            playButton.innerHTML = PLAY_SVG;
+            playPause();
           });
 
           if ("seekto" in navigator.mediaSession) {
