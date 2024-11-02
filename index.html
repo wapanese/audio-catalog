@@ -971,15 +971,15 @@
 
         function updateMediaSessionPositionState() {
           if ("mediaSession" in navigator && !isNaN(audio.duration)) {
-            navigator.mediaSession.setPositionState({
-              duration: audio.duration,
-              playbackRate: audio.playbackRate,
-              position: audio.currentTime,
-            });
-
-            navigator.mediaSession.playbackState = audio.paused
-              ? "paused"
-              : "playing";
+            try {
+              navigator.mediaSession.setPositionState({
+                duration: audio.duration,
+                playbackRate: audio.playbackRate,
+                position: audio.currentTime,
+              });
+            } catch (e) {
+              console.warn("MediaSession position state update failed:", e);
+            }
           }
         }
 
@@ -1035,17 +1035,26 @@
           }
         }
 
+        let mediaSessionUpdateInterval;
         function playPause() {
           if (audio.paused) {
             audio.play();
             playButton.innerHTML = PAUSE_SVG;
+
+            mediaSessionUpdateInterval = setInterval(
+              updateMediaSessionPositionState,
+              1000
+            );
           } else {
             audio.pause();
             playButton.innerHTML = PLAY_SVG;
+
+            if (mediaSessionUpdateInterval) {
+              clearInterval(mediaSessionUpdateInterval);
+            }
           }
           updateMediaSessionPositionState();
         }
-
         playButton.addEventListener("click", () => {
           playPause();
         });
@@ -1053,7 +1062,15 @@
         nextButton.addEventListener("click", playNext);
         prevButton.addEventListener("click", playPrevious);
 
-        audio.addEventListener("ended", playNext);
+        audio.addEventListener("ended", () => {
+          if (mediaSessionUpdateInterval) {
+            clearInterval(mediaSessionUpdateInterval);
+          }
+
+          setTimeout(() => {
+            playNext();
+          }, 100);
+        });
 
         let isDragging = false;
         let wasPlaying = false;
@@ -1127,13 +1144,9 @@
           );
           navigator.mediaSession.setActionHandler("nexttrack", playNext);
 
-          navigator.mediaSession.setActionHandler("play", () => {
-            playPause();
-          });
+          navigator.mediaSession.setActionHandler("play", playPause);
 
-          navigator.mediaSession.setActionHandler("pause", () => {
-            playPause();
-          });
+          navigator.mediaSession.setActionHandler("pause", playPause);
 
           if ("seekto" in navigator.mediaSession) {
             navigator.mediaSession.setActionHandler("seekto", (details) => {
@@ -1144,10 +1157,24 @@
               }
             });
           }
+
+          return () => {
+            if (mediaSessionUpdateInterval) {
+              clearInterval(mediaSessionUpdateInterval);
+            }
+          };
         }
 
-        audio.play();
-        playButton.innerHTML = PAUSE_SVG;
+        audio
+          .play()
+          .then(() => {
+            playButton.innerHTML = PAUSE_SVG;
+            mediaSessionUpdateInterval = setInterval(
+              updateMediaSessionPositionState,
+              1000
+            );
+          })
+          .catch((e) => console.warn("Autoplay failed:", e));
       }
 
       async function createInputPrompt() {
