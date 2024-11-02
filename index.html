@@ -980,6 +980,21 @@
             5,
             "0"
           )} / ${formatTime(audio.duration).padStart(5, "0")}`;
+
+          if (
+            "mediaSession" in navigator &&
+            "setPositionState" in navigator.mediaSession
+          ) {
+            if (!audio.duration || isNaN(audio.duration)) {
+              return;
+            }
+
+            navigator.mediaSession.setPositionState({
+              duration: audio.duration,
+              playbackRate: audio.playbackRate,
+              position: audio.currentTime,
+            });
+          }
         };
 
         function formatTime(seconds) {
@@ -1124,28 +1139,6 @@
               }
             });
           }
-
-          function updatePositionState() {
-            if (
-              "mediaSession" in navigator &&
-              "setPositionState" in navigator.mediaSession
-            ) {
-              if (!audio.duration || isNaN(audio.duration)) {
-                return;
-              }
-
-              navigator.mediaSession.setPositionState({
-                duration: audio.duration,
-                playbackRate: audio.playbackRate,
-                position: audio.currentTime,
-              });
-            }
-          }
-
-          audio.addEventListener("loadedmetadata", updatePositionState);
-          audio.addEventListener("timeupdate", updatePositionState);
-          audio.addEventListener("ratechange", updatePositionState);
-          audio.addEventListener("durationchange", updatePositionState);
         }
 
         audio.play();
