@@ -276,16 +276,6 @@
         color: var(--on-primary);
       }
 
-      #custom-audio-player {
-        font-family: var(--font-family);
-      }
-
-      #audio-title {
-        font-size: 1rem;
-        margin-bottom: 5px;
-        font-weight: bold;
-      }
-
       #subtitles {
         font-size: 2rem;
         color: var(--on-background);
@@ -328,6 +318,13 @@
         box-sizing: border-box;
       }
 
+      .audio-control-buttons {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+
       .audio-controls button {
         flex: 0 0 auto;
         width: 36px;
@@ -340,7 +337,8 @@
         justify-content: center;
       }
 
-      .audio-controls > button svg {
+      .audio-controls button > svg {
+        display: block;
         width: 36px;
         height: 36px;
         fill: var(--on-surface);
@@ -351,7 +349,7 @@
         height: 12px;
         background-color: var(--background);
         cursor: pointer;
-        margin: 0 15px;
+        margin-left: 16px;
         position: relative;
         border-radius: 6px;
       }
@@ -377,6 +375,25 @@
         filter: brightness(0.8);
       }
 
+      .audio-title-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        opacity: 0.5;
+      }
+
+      #audio-title {
+        width: 100%;
+        color: var(--on-surface);
+        font-size: 1rem;
+        font-weight: bold;
+      }
+
+      #time-display {
+        white-space: nowrap;
+      }
+
       #search-bar-container {
         display: none;
         padding: 20px;
@@ -393,6 +410,31 @@
         color: var(--on-surface);
         transition: background-color var(--transition-speed),
           color var(--transition-speed);
+      }
+
+      @media (max-width: 768px) {
+        .audio-controls {
+          flex-direction: column;
+        }
+
+        .audio-control-buttons {
+          flex-direction: row;
+          justify-content: center;
+          gap: 48px;
+          margin: 10px 0;
+        }
+
+        .progress-container {
+          flex: 0 0 auto;
+          width: 100%;
+          margin: 0;
+        }
+
+        .audio-controls button,
+        .audio-controls > button svg {
+          width: 48px;
+          height: 48px;
+        }
       }
     </style>
   </head>
@@ -860,10 +902,7 @@
         playerContainer.id = "custom-audio-player";
 
         const titleContainer = document.createElement("div");
-        titleContainer.style.width = "100%";
-        titleContainer.style.display = "flex";
-        titleContainer.style.justifyContent = "flex-start";
-        titleContainer.style.marginBottom = "5px";
+        titleContainer.className = "audio-title-container";
 
         const subtitlesDiv = document.createElement("div");
         subtitlesDiv.id = "subtitles";
@@ -884,26 +923,38 @@
         audioTitle.style.fontSize = "1rem";
         audioTitle.style.fontWeight = "bold";
         titleContainer.appendChild(audioTitle);
+
+        const timeDisplay = document.createElement("div");
+
+        timeDisplay.id = "time-display";
+        timeDisplay.textContent = "0:00 / 0:00";
+
+        titleContainer.appendChild(timeDisplay);
+
         playerContainer.appendChild(titleContainer);
 
         const controlsContainer = document.createElement("div");
         controlsContainer.className = "audio-controls";
         playerContainer.appendChild(controlsContainer);
 
+        const controlButtonsContainer = document.createElement("div");
+        controlButtonsContainer.className = "audio-control-buttons";
+        controlsContainer.appendChild(controlButtonsContainer);
+
         const prevButton = document.createElement("button");
         prevButton.id = "prev-button";
         prevButton.innerHTML = PREV_SVG;
-        controlsContainer.appendChild(prevButton);
+        controlButtonsContainer.appendChild(prevButton);
 
         const playButton = document.createElement("button");
         playButton.id = "play-button";
         playButton.innerHTML = PLAY_SVG;
-        controlsContainer.appendChild(playButton);
+        controlButtonsContainer.appendChild(playButton);
 
         const nextButton = document.createElement("button");
         nextButton.id = "next-button";
         nextButton.innerHTML = NEXT_SVG;
-        controlsContainer.appendChild(nextButton);
+        controlButtonsContainer.appendChild(nextButton);
 
         const progressContainer = document.createElement("div");
         progressContainer.className = "progress-container";
@@ -913,25 +964,12 @@
         progressBar.className = "progress-bar";
         progressContainer.appendChild(progressBar);
 
-        const timeDisplayContainer = document.createElement("div");
-        timeDisplayContainer.style.display = "flex";
-        timeDisplayContainer.style.height = "100%";
-        timeDisplayContainer.style.alignItems = "center";
-
-        const timeDisplay = document.createElement("div");
-
-        timeDisplay.id = "time-display";
-        timeDisplay.textContent = "0:00 / 0:00";
-
-        timeDisplayContainer.appendChild(timeDisplay);
-        controlsContainer.appendChild(timeDisplayContainer);
-
         document.body.appendChild(playerContainer);
 
         const audio = document.createElement("audio");
         audio.id = "current-audio";
         audio.src = audioList[index];
-        audio.preload = "none";
+        audio.preload = "auto";
         audio.style.display = "none";
         document.body.appendChild(audio);
 
